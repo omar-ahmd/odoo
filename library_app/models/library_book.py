@@ -1,10 +1,10 @@
 from odoo import api, fields, models
-
+from odoo.exceptions import Warning 
 
 class Book(models.Model):
     _name = 'library.book'
     _description = 'Book'
-    @api.model_create_multi
+
     def _check_isbn(self):
         self.ensure_one()
         digits = [int(x) for x in self.isbn if x.isdigit()]
@@ -14,6 +14,14 @@ class Book(models.Model):
             remain = sum(terms) % 10
             check = 10 - remain if remain != 0 else 0
             return digits[-1] == check
+
+    def button_check_isbn(self):
+        for book in self:
+            if not book.isbn:
+                raise Warning('Please provide an ISBN for %s' % book.name)
+            if book.isbn and not book._check_isbn():
+                raise Warning('%s is an invalid ISBN' % book._check_isbn())
+        return True
 
     name = fields.Char('Title', required=True)
     isbn = fields.Char('ISBN')
